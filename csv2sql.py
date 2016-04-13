@@ -35,7 +35,7 @@ def main():
                 first = False
             else:
                 sys.stdout.write(',\n')
-            sys.stdout.write('(' + ','.join(row) + ')')
+            sys.stdout.write('(' + ','.join(row).replace('\'', '\\\'').replace('"', '\'') + ')')
 
         sys.stdout.write(';')
 
