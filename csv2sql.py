@@ -40,7 +40,7 @@ def main():
                 print(header_row)
             else:
                 sys.stdout.write(',\n')
-            sys.stdout.write('(' + ','.join(row).replace('\'', '\'\'').replace('"', '\'') + ')')
+            sys.stdout.write('(' + ','.join(row).replace('\'', '\'\'').replace('"', '\'').replace('&', '&&') + ')')
             # Increase counter
             counter += 1
 
