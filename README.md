@@ -2,5 +2,6 @@
 
 Simple python tool to create SQL `INSERT` statements from CSV files.
 
-## Usage
+## Usage  
+
 `python csv2sql.py -t <tablename> <csv file>`
