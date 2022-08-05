@@ -1,0 +1,7 @@
+fA : Number,fB : Bool,fC : TextNotNull,fD : Text,fX
+1,,a,In this case,In this case
+2,,b,The empty value,The field without type signature
+3,TRUE,c,will be pasred,will be parsed
+4,,,as Null,as string without null value
+5,,,,directly
+6,FALSE,f,,

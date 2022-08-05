@@ -5,19 +5,48 @@ import csv
 import sys
 
 '''
-This script takes a CSV file with a mandatory header and a sql tableName and converts the data in the csv file into
+This script takes a CSV file with a mandatory header and a sql table_name and converts the data in the csv file into
 an SQL INSERT statement.
 '''
 
-# TODO:Data types for each field.
+# Data types for each field.
 field_types = []
+
+
+# Get each types for the current field and return the field name.
+def parse_header(field, types=field_types):
+    field_name, *field_type = map(str.strip, field.split(':'))
+    if field_type == []:
+        types.append('TextNotNull')
+        return field_name
+    field_type = field_type[0].lower()
+    if 'text' in field_type and 'not' in field_type and 'null' in field_type:
+        types.append('TextNotNull')
+    elif 'text' in field_type and 'not' not in field_type:
+        types.append('Text')
+    else:
+        types.append(field_type.capitalize())
+    return field_name
+
+
+# Parse item according to its types.
+def parse_item(index, item, types=field_types):
+    current_type = types[index]
+    result_item = item.replace('\'', '\'\'').replace('"', '\'').replace('&', '&.').replace('""', '"')
+    if current_type == 'TextNotNull':
+        result_item = '\'' + result_item + '\''
+    elif current_type == 'Text':
+        result_item = 'NULL' if result_item == '' else '\'' + result_item + '\''
+    else:
+        result_item = 'NULL' if result_item == '' else result_item
+    return result_item
 
 
 def parse_arguments():
     # initialize argumentparser and arguments
-    parser = argparse.ArgumentParser(description='Takes a csv file and a tableName and creates an SQL insert statement')
-    parser.add_argument('csvFile', help='The CSV file to be read')
-    parser.add_argument('-t', '--table', dest='tableName', help='The name of the destination SQL table', required=True)
+    parser = argparse.ArgumentParser(description='Takes a csv file and a table_name and creates an SQL insert statement')
+    parser.add_argument('csv_file', help='The CSV file to be read')
+    parser.add_argument('-t', '--table', dest='table_name', help='The name of the destination SQL table', required=True)
     parser.add_argument('-d', '--delimiter', dest='delimiter', default=',', help='The delimiter used in the CSV')
     parser.add_argument('-o', '--output', dest='output', default='stdout', help='The output of the SQL statement')
     parser.add_argument('-e', '--encoding', dest='encoding', default='utf-8', help='Encoding when reading and writing file.')
@@ -29,18 +58,18 @@ def parse_arguments():
 
 def output_statement(args, output=sys.stdout):
     # Open CSV and start output
-    with open(args.csvFile, 'r', encoding=args.encoding) as f:
+    with open(args.csv_file, 'r', encoding=args.encoding) as f:
         reader = csv.reader(f, delimiter=args.delimiter, quoting=csv.QUOTE_ALL)
 
         # Create the header row, since we may have to repeat it
-        header_row = 'INSERT INTO ' + args.tableName + ' ('
+        header_row = 'INSERT INTO ' + args.table_name + ' ('
         first = True
         for item in next(reader):
             if first:
                 first = False
             else:
                 header_row += ', '
-            header_row += '"' + item + '"'
+            header_row += '"' + parse_header(item) + '"'
         header_row += ') VALUES '
 
         # Set a counter, since there can't be more than 1000 inserts at a time
@@ -63,12 +92,12 @@ def output_statement(args, output=sys.stdout):
                     first = False
                 else:
                     output.write(', ')
-                output.write('\'' + item.replace('\'', '\'\'').replace('"', '\'').replace('&', '&.').replace('""', '"') + '\'')
+                output.write(parse_item(index, item))
             output.write(')')
             # Increase counter
             counter += 1
 
-        output.write(';')
+        output.write(';\n')
 
 
 def main():
