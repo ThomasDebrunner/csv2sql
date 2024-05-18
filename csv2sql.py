@@ -24,10 +24,15 @@ def parse_header(field, types=field_types):
         types.append('TextNotNull')
     elif 'text' in field_type and 'not' not in field_type:
         types.append('Text')
+    elif 'numeric' in field_type and 'not' not in field_type:
+        types.append('Numeric')
+    elif 'boolean' in field_type and 'not' not in field_type:
+        types.append('Boolean')
+    elif 'datetime' in field_type and 'not' not in field_type:
+        types.append('Datetime')
     else:
         types.append(field_type.capitalize())
     return field_name
-
 
 # Parse item according to its types.
 def parse_item(index, item, types=field_types):
@@ -37,6 +42,12 @@ def parse_item(index, item, types=field_types):
         result_item = '\'' + result_item + '\''
     elif current_type == 'Text':
         result_item = 'NULL' if result_item == '' else '\'' + result_item + '\''
+    elif current_type == 'Datetime':
+        result_item = 'NULL' if result_item == '' else '\'' + result_item + '\''
+    elif current_type == 'Numeric':
+        result_item = 'NULL' if result_item == '' else result_item
+    elif current_type == 'Boolean':
+        result_item = 'NULL' if result_item == '' else result_item
     else:
         result_item = 'NULL' if result_item == '' else result_item
     return result_item
@@ -62,7 +73,7 @@ def output_statement(args, output=sys.stdout):
         reader = csv.reader(f, delimiter=args.delimiter, quoting=csv.QUOTE_ALL)
 
         # Create the header row, since we may have to repeat it
-        header_row = 'INSERT INTO ' + args.table_name + ' ('
+        header_row = 'INSERT INTO "' + args.table_name + '" ('
         first = True
         for item in next(reader):
             if first:
@@ -79,11 +90,11 @@ def output_statement(args, output=sys.stdout):
         for row in reader:
             if counter % 1000 == 0:
                 if counter != 0:
-                    output.write(';\n')
+                    print(';', end='\n')
                 print(header_row)
             else:
-                output.write(',\n')
-            output.write('(')
+                print(',', end='\n')
+            print('(', end='')
             first = True
 
             # Loop through the items in each row
@@ -91,13 +102,13 @@ def output_statement(args, output=sys.stdout):
                 if first:
                     first = False
                 else:
-                    output.write(', ')
-                output.write(parse_item(index, item))
-            output.write(')')
+                    print(', ', end='')
+                print(parse_item(index, item), end='')
+            print(')', end='')
             # Increase counter
             counter += 1
 
-        output.write(';\n')
+        print(';', end='\n')
 
 
 def main():
