@@ -50,6 +50,8 @@ def parse_arguments():
     parser.add_argument('-d', '--delimiter', dest='delimiter', default=',', help='The delimiter used in the CSV')
     parser.add_argument('-o', '--output', dest='output', default='stdout', help='The output of the SQL statement')
     parser.add_argument('-e', '--encoding', dest='encoding', default='utf-8', help='Encoding when reading and writing file.')
+    parser.add_argument('-s', '--statement', dest='statement', default='insert', help='Statement type you want to create. Can be insert or update')
+    parser.add_argument('-pc', '--primary_column', dest='primary_column', default=0, help='Number of the column that contains the primary key')
 
     # parse arguments
     args = parser.parse_args()
@@ -57,6 +59,13 @@ def parse_arguments():
 
 
 def output_statement(args, output=sys.stdout):
+    if args.statement == 'update':
+        output_update_statement(args, output)
+    else:
+        output_insert_statement(args, output)
+
+
+def output_insert_statement(args, output=sys.stdout):
     # Open CSV and start output
     with open(args.csv_file, 'r', encoding=args.encoding) as f:
         reader = csv.reader(f, delimiter=args.delimiter, quoting=csv.QUOTE_ALL)
@@ -98,6 +107,47 @@ def output_statement(args, output=sys.stdout):
             counter += 1
 
         output.write(';\n')
+
+
+def output_update_statement(args, output=sys.stdout):
+    # Open CSV and start output
+    with open(args.csv_file, 'r', encoding=args.encoding) as f:
+        reader = csv.reader(f, delimiter=args.delimiter, quoting=csv.QUOTE_ALL)
+
+        # Create the header row, since we have to repeat it for every row
+        column_names = []
+        header_row = 'UPDATE ' + args.table_name + ' SET '
+        for item in next(reader):
+            column_names.append('"' + parse_header(item) + '"')
+
+        # Loop through the rows...
+        for row in reader:
+            # Write the header row
+            output.write(header_row)
+
+            # Store how many non-primary-key columns there are
+            nr_of_items = len(row) - 1
+
+            # Keep track of the added items
+            added_items = 0
+
+            # Loop through the items in each row
+            for index, item in enumerate(row):
+                # Check if the row is the one that contains the primary key
+                if index == int(args.primary_column):
+                    # Primary key row: Create a where clause that specifies the primary key
+                    where_clause = ' WHERE ' + column_names[index] + ' = ' + parse_item(index, item) + ';\n'
+                else:
+                    # Not the primary key row: Add the item to the output
+                    output.write(column_names[index] + ' = ' + parse_item(index, item))
+                    # Increase the counter
+                    added_items += 1
+
+                    # Add a "," as long as the item is not the last one
+                    if added_items < nr_of_items:
+                        output.write(', ')
+            # write the where statement specifying the primary key
+            output.write(where_clause)
 
 
 def main():

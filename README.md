@@ -1,6 +1,6 @@
 # CSV2SQL
 
-Simple python tool to create SQL `INSERT` statements from CSV files.
+Simple python tool to create SQL `INSERT` or `UPDATE` statements from CSV files.
 
 ## Usage  
 
@@ -13,6 +13,8 @@ Simple python tool to create SQL `INSERT` statements from CSV files.
 * `-d` or `--delimiter`: (Optional) The delimiter used in the CSV, `,` by default.
 * `-o` or `--output`: (Optional) The output of the SQL statement, `stdout` by default.  
 * `-e` or `--encoding`: (Optional) The Encoding when reading and writing file, `utf-8` by default.  
+* `-s` or `--statement`: (Optional) The statement type you want to create. Can be `insert` or `update`, `insert` by default.
+* `-pc` or `--primary_column`: (Optional) The column inside your csv that contains the primary key for your update statement, `0` by default.
 
 ### CSV file format  
 
@@ -24,8 +26,11 @@ The first line of the CSV file is the header of the table. You can optionally to
 
 If there's no type signature for one field, it would be `TextNotNull`. See the format of the file `example.csv` and the result below.  
 
-![sql_result](./result.jpg)  
+### Insert result
+![sql_insert_result](./insert_result.jpg)  
 
+### Update result
+![sql_update_result](./update_result.jpg)
 
 ### License 
 
